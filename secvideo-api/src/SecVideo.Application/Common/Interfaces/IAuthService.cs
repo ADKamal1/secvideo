@@ -5,6 +5,7 @@ namespace SecVideo.Application.Common.Interfaces;
 public interface IAuthService
 {
     Task<LoginResponse> LoginAsync(LoginRequest request, string? ipAddress, CancellationToken cancellationToken);
+    Task RegisterAsync(RegisterRequest request, string? ipAddress, CancellationToken cancellationToken);
     Task<LoginResponse> VerifyDeviceAsync(string tempToken, DeviceVerificationRequest request, string? ipAddress, CancellationToken cancellationToken);
     Task<SessionValidationResponse> ValidateSessionAsync(Guid userId, Guid sessionId, string deviceHash, CancellationToken cancellationToken);
     Task LogoutAsync(Guid userId, Guid sessionId, CancellationToken cancellationToken);

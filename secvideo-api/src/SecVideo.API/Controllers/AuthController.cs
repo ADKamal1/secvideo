@@ -67,6 +67,27 @@ public class AuthController : ControllerBase
         }
     }
 
+    [HttpPost("register")]
+    public async Task<ActionResult> Register([FromBody] RegisterRequest request, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+            await _authService.RegisterAsync(request, ipAddress, cancellationToken);
+            return Ok(new { message = "Registration successful. You can now log in." });
+        }
+        catch (InvalidOperationException ex)
+        {
+            _logger.LogWarning("Registration failed for {Email}: {Message}", request.Email, ex.Message);
+            return BadRequest(new { message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error during registration for {Email}", request.Email);
+            return StatusCode(500, new { message = "An error occurred during registration" });
+        }
+    }
+
     [HttpPost("resend-verification")]
     public async Task<ActionResult> ResendVerification(CancellationToken cancellationToken)
     {
