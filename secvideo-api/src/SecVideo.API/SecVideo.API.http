@@ -1,0 +1,6 @@
+@SecVideo.API_HostAddress = http://localhost:5266
+
+GET {{SecVideo.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

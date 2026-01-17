@@ -17,15 +17,20 @@ export const LoginPage: React.FC = () => {
 
   const expired = searchParams.get('expired') === 'true';
 
+  const { token } = useAuthStore();
+
   useEffect(() => {
-    if (isAuthenticated) {
-      if (isDeviceVerified) {
-        navigate('/');
-      } else {
-        navigate('/device-verify');
-      }
+    if (isAuthenticated && isDeviceVerified) {
+      navigate('/');
     }
   }, [isAuthenticated, isDeviceVerified, navigate]);
+
+  // Redirect to device verification if we have a temp token but not authenticated
+  useEffect(() => {
+    if (token && !isAuthenticated && !isDeviceVerified) {
+      navigate('/device-verify');
+    }
+  }, [token, isAuthenticated, isDeviceVerified, navigate]);
 
   useEffect(() => {
     return () => clearError();
