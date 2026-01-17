@@ -1,69 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { clsx } from 'clsx';
-import { Search, Filter, Grid, List, SlidersHorizontal } from 'lucide-react';
+import { Search, Filter, Grid, List, SlidersHorizontal, RefreshCw } from 'lucide-react';
 import { CourseCard } from '@/components/common/Card';
 import { Button } from '@/components/common/Button';
 import { Skeleton } from '@/components/common/Loader';
-
-// Mock data
-const mockCourses = [
-  {
-    id: '1',
-    title: 'Advanced React Patterns',
-    description: 'Master advanced React concepts including hooks, context, and performance optimization techniques.',
-    thumbnail: 'https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=800&h=450&fit=crop',
-    instructorName: 'Sarah Johnson',
-    videosCount: 24,
-    progress: 68,
-  },
-  {
-    id: '2',
-    title: 'Node.js Backend Development',
-    description: 'Build scalable backend applications with Node.js, Express, and MongoDB from scratch.',
-    thumbnail: 'https://images.unsplash.com/photo-1627398242454-45a1465c2479?w=800&h=450&fit=crop',
-    instructorName: 'Mike Chen',
-    videosCount: 32,
-    progress: 45,
-  },
-  {
-    id: '3',
-    title: 'UI/UX Design Fundamentals',
-    description: 'Learn the principles of great design and create stunning user interfaces.',
-    thumbnail: 'https://images.unsplash.com/photo-1561070791-2526d30994b5?w=800&h=450&fit=crop',
-    instructorName: 'Emily Davis',
-    videosCount: 18,
-    progress: 12,
-  },
-  {
-    id: '4',
-    title: 'TypeScript Masterclass',
-    description: 'Deep dive into TypeScript and learn how to build type-safe applications.',
-    thumbnail: 'https://images.unsplash.com/photo-1516116216624-53e697fedbea?w=800&h=450&fit=crop',
-    instructorName: 'John Smith',
-    videosCount: 28,
-    progress: 0,
-  },
-  {
-    id: '5',
-    title: 'Cloud Architecture with AWS',
-    description: 'Design and deploy scalable cloud solutions using Amazon Web Services.',
-    thumbnail: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=800&h=450&fit=crop',
-    instructorName: 'Alex Turner',
-    videosCount: 36,
-    progress: 22,
-  },
-  {
-    id: '6',
-    title: 'Mobile App Development with Flutter',
-    description: 'Build beautiful cross-platform mobile applications with Flutter and Dart.',
-    thumbnail: 'https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?w=800&h=450&fit=crop',
-    instructorName: 'Lisa Park',
-    videosCount: 42,
-    progress: 8,
-  },
-];
+import { coursesApi } from '@/services/api/coursesApi';
+import type { Course } from '@/types';
 
 type FilterType = 'all' | 'in-progress' | 'completed' | 'not-started';
 type ViewMode = 'grid' | 'list';
@@ -73,28 +17,97 @@ export const CoursesPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [filter, setFilter] = useState<FilterType>('all');
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
-  const [isLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
-  const filteredCourses = mockCourses.filter((course) => {
-    // Search filter
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      if (
-        !course.title.toLowerCase().includes(query) &&
-        !course.instructorName.toLowerCase().includes(query)
-      ) {
-        return false;
-      }
+  // Fetch courses from API
+  const fetchCourses = async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await coursesApi.getCourses({ search: searchQuery || undefined });
+      setCourses(response.items || []);
+    } catch (err) {
+      console.error('Failed to fetch courses:', err);
+      setError('Failed to load courses. Please try again.');
+      // Fallback to mock data for demo
+      setCourses([
+        {
+          id: '1',
+          title: 'Advanced React Patterns',
+          description: 'Master advanced React concepts including hooks, context, and performance optimization techniques.',
+          thumbnail: 'https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=800&h=450&fit=crop',
+          instructorId: '1',
+          instructorName: 'Sarah Johnson',
+          videosCount: 24,
+          totalDuration: 43200,
+          enrolledCount: 156,
+          isActive: true,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          progress: 68,
+        },
+        {
+          id: '2',
+          title: 'Node.js Backend Development',
+          description: 'Build scalable backend applications with Node.js, Express, and MongoDB from scratch.',
+          thumbnail: 'https://images.unsplash.com/photo-1627398242454-45a1465c2479?w=800&h=450&fit=crop',
+          instructorId: '2',
+          instructorName: 'Mike Chen',
+          videosCount: 32,
+          totalDuration: 57600,
+          enrolledCount: 234,
+          isActive: true,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          progress: 45,
+        },
+        {
+          id: '3',
+          title: 'UI/UX Design Fundamentals',
+          description: 'Learn the principles of great design and create stunning user interfaces.',
+          thumbnail: 'https://images.unsplash.com/photo-1561070791-2526d30994b5?w=800&h=450&fit=crop',
+          instructorId: '3',
+          instructorName: 'Emily Davis',
+          videosCount: 18,
+          totalDuration: 32400,
+          enrolledCount: 89,
+          isActive: true,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          progress: 12,
+        },
+      ]);
+    } finally {
+      setIsLoading(false);
     }
+  };
 
+  useEffect(() => {
+    fetchCourses();
+  }, []);
+
+  // Debounced search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (searchQuery !== '') {
+        fetchCourses();
+      }
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  const filteredCourses = courses.filter((course) => {
     // Status filter
+    const progress = course.progress ?? 0;
     switch (filter) {
       case 'in-progress':
-        return course.progress > 0 && course.progress < 100;
+        return progress > 0 && progress < 100;
       case 'completed':
-        return course.progress === 100;
+        return progress === 100;
       case 'not-started':
-        return course.progress === 0;
+        return progress === 0;
       default:
         return true;
     }
@@ -120,10 +133,25 @@ export const CoursesPage: React.FC = () => {
         <div>
           <h1 className="text-2xl lg:text-3xl font-bold text-text-primary">My Courses</h1>
           <p className="text-text-secondary mt-1">
-            {mockCourses.length} courses enrolled
+            {courses.length} courses enrolled
           </p>
         </div>
+        <Button 
+          variant="secondary" 
+          leftIcon={<RefreshCw size={16} />}
+          onClick={fetchCourses}
+          isLoading={isLoading}
+        >
+          Refresh
+        </Button>
       </div>
+
+      {/* Error message */}
+      {error && (
+        <div className="p-4 rounded-xl bg-accent-red/10 border border-accent-red/20 text-accent-red">
+          {error}
+        </div>
+      )}
 
       {/* Filters Bar */}
       <div className="flex flex-col sm:flex-row gap-4">
@@ -251,9 +279,9 @@ export const CoursesPage: React.FC = () => {
                   id={course.id}
                   title={course.title}
                   description={course.description}
-                  thumbnail={course.thumbnail}
-                  instructorName={course.instructorName}
-                  videosCount={course.videosCount}
+                  thumbnail={course.thumbnail || 'https://images.unsplash.com/photo-1516116216624-53e697fedbea?w=800&h=450&fit=crop'}
+                  instructorName={course.instructorName || 'Unknown Instructor'}
+                  videosCount={course.videosCount || 0}
                   progress={course.progress}
                   onClick={() => navigate(`/courses/${course.id}`)}
                 />
@@ -263,7 +291,7 @@ export const CoursesPage: React.FC = () => {
                   className="w-full flex gap-4 p-4 bg-surface border border-surface-border rounded-2xl hover:border-primary-500/30 transition-colors group text-left"
                 >
                   <img
-                    src={course.thumbnail}
+                    src={course.thumbnail || 'https://images.unsplash.com/photo-1516116216624-53e697fedbea?w=800&h=450&fit=crop'}
                     alt={course.title}
                     className="w-48 h-28 rounded-xl object-cover flex-shrink-0"
                   />
@@ -276,10 +304,10 @@ export const CoursesPage: React.FC = () => {
                     </p>
                     <div className="flex items-center gap-4 mt-3">
                       <span className="text-sm text-text-muted">
-                        {course.videosCount} videos
+                        {course.videosCount || 0} videos
                       </span>
                       <span className="text-sm text-text-muted">
-                        by {course.instructorName}
+                        by {course.instructorName || 'Unknown'}
                       </span>
                     </div>
                     {course.progress !== undefined && (
@@ -306,4 +334,3 @@ export const CoursesPage: React.FC = () => {
     </div>
   );
 };
-

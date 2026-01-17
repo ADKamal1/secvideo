@@ -4,13 +4,13 @@ import { MainLayout } from '@/components/layout/MainLayout';
 import { useAuthStore } from '@/store/authStore';
 
 // Auth pages
-import { LoginPage, DeviceVerifyPage, SessionBlockedPage } from '@/pages/auth';
+import { LoginPage, DeviceVerifyPage, SessionBlockedPage, RegisterPage } from '@/pages/auth';
 
 // Student pages
-import { DashboardPage, CoursesPage, VideoPlayerPage } from '@/pages/student';
+import { DashboardPage, CoursesPage, VideoPlayerPage, CourseDetailPage } from '@/pages/student';
 
 // Admin pages
-import { AdminDashboard } from '@/pages/admin';
+import { AdminDashboard, VideoUploadPage } from '@/pages/admin';
 
 // Protected route wrapper
 interface ProtectedRouteProps {
@@ -66,6 +66,14 @@ function App() {
         />
         <Route path="/device-verify" element={<DeviceVerifyPage />} />
         <Route path="/session-blocked" element={<SessionBlockedPage />} />
+        <Route
+          path="/register"
+          element={
+            <PublicRoute>
+              <RegisterPage />
+            </PublicRoute>
+          }
+        />
 
         {/* Protected routes with layout */}
         <Route
@@ -80,7 +88,7 @@ function App() {
           
           {/* Student routes */}
           <Route path="/courses" element={<CoursesPage />} />
-          <Route path="/courses/:courseId" element={<CoursesPage />} />
+          <Route path="/courses/:courseId" element={<CourseDetailPage />} />
           <Route path="/watch/:videoId" element={<VideoPlayerPage />} />
           <Route path="/history" element={<CoursesPage />} />
           
@@ -97,7 +105,7 @@ function App() {
             path="/upload"
             element={
               <ProtectedRoute allowedRoles={['admin', 'instructor']}>
-                <div className="text-text-primary">Upload Video Page - Coming Soon</div>
+                <VideoUploadPage />
               </ProtectedRoute>
             }
           />

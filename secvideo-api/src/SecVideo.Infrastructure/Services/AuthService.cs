@@ -90,6 +90,39 @@ public class AuthService : IAuthService
         return await CreateSessionAndReturnResponse(user, user.Device, ipAddress, cancellationToken);
     }
 
+    public async Task RegisterAsync(RegisterRequest request, string? ipAddress, CancellationToken cancellationToken)
+    {
+        // Check if email already exists
+        var existingUser = await _context.Users
+            .FirstOrDefaultAsync(u => u.Email.ToLower() == request.Email.ToLower(), cancellationToken);
+
+        if (existingUser != null)
+        {
+            throw new InvalidOperationException("An account with this email already exists");
+        }
+
+        // Validate password
+        if (string.IsNullOrEmpty(request.Password) || request.Password.Length < 8)
+        {
+            throw new InvalidOperationException("Password must be at least 8 characters long");
+        }
+
+        // Create user
+        var user = new User
+        {
+            Id = Guid.NewGuid(),
+            Email = request.Email.ToLower(),
+            Name = request.Name,
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password),
+            Role = UserRole.Student, // Default role for self-registration
+            IsActive = true,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        _context.Users.Add(user);
+        await _context.SaveChangesAsync(cancellationToken);
+    }
+
     public async Task<LoginResponse> VerifyDeviceAsync(string tempToken, DeviceVerificationRequest request, string? ipAddress, CancellationToken cancellationToken)
     {
         var userId = _jwtService.ValidateTempToken(tempToken);
